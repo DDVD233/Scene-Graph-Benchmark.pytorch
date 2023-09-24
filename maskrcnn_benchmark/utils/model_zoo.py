@@ -3,7 +3,7 @@ import os
 import sys
 
 try:
-    from torch.hub import _download_url_to_file
+    from torch.hub import download_url_to_file
     from torch.hub import urlparse
     from torch.hub import HASH_REGEX
 except ImportError:
@@ -56,6 +56,6 @@ def cache_url(url, model_dir=None, progress=True):
             # if the hash_prefix is less than 6 characters
             if len(hash_prefix) < 6:
                 hash_prefix = None
-        _download_url_to_file(url, cached_file, hash_prefix, progress=progress)
+        download_url_to_file(url, cached_file, hash_prefix, progress=progress)
     synchronize()
     return cached_file
