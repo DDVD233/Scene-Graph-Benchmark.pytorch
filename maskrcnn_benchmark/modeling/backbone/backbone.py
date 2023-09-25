@@ -8,6 +8,7 @@ from maskrcnn_benchmark.modeling.make_layers import conv_with_kaiming_uniform
 from . import fpn as fpn_module
 from . import resnet
 from . import vgg
+from .eva_vit import create_eva_vit_g
 
 
 @registry.BACKBONES.register("VGG-16")
@@ -78,6 +79,12 @@ def build_resnet_fpn_p3p7_backbone(cfg):
     )
     model = nn.Sequential(OrderedDict([("body", body), ("fpn", fpn)]))
     model.out_channels = out_channels
+    return model
+
+
+@registry.BACKBONES.register("EVA")
+def build_resnet_fpn_p3p7_backbone(cfg):
+    model = create_eva_vit_g()
     return model
 
 

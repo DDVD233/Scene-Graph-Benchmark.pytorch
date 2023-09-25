@@ -192,7 +192,6 @@ def make_data_loader(cfg, mode='train', is_distributed=False, start_iter=0, data
         shuffle = False if not is_distributed else True
         num_iters = None
         start_iter = 0
-
     if images_per_gpu > 1:
         logger = logging.getLogger(__name__)
         logger.warning(
