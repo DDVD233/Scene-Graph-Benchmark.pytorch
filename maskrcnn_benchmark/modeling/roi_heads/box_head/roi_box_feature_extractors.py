@@ -12,7 +12,7 @@ from maskrcnn_benchmark.modeling.make_layers import make_fc
 
 @registry.ROI_BOX_FEATURE_EXTRACTORS.register("ResNet50Conv5ROIFeatureExtractor")
 class ResNet50Conv5ROIFeatureExtractor(nn.Module):
-    def __init__(self, config, in_channels):
+    def __init__(self, config, in_channels, *args):
         super(ResNet50Conv5ROIFeatureExtractor, self).__init__()
 
         resolution = config.MODEL.ROI_BOX_HEAD.POOLER_RESOLUTION
