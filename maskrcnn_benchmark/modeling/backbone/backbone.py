@@ -9,6 +9,7 @@ from . import fpn as fpn_module
 from . import resnet
 from . import vgg
 from .eva_vit import create_eva_vit_g
+from .build_eva_02 import build_eva2_model
 
 
 @registry.BACKBONES.register("VGG-16")
@@ -84,7 +85,7 @@ def build_resnet_fpn_p3p7_backbone(cfg):
 
 @registry.BACKBONES.register("EVA")
 def build_resnet_fpn_p3p7_backbone(cfg):
-    model = create_eva_vit_g()
+    model = build_eva2_model()
     return model
 
 

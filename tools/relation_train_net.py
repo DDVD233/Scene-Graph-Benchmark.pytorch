@@ -51,7 +51,7 @@ def train(cfg, local_rank, distributed, logger):
 
     # modules that should be always set in eval mode
     # their eval() method should be called after model.train() is called
-    eval_modules = (model.rpn, model.backbone, model.roi_heads.box,)
+    eval_modules = (model.backbone, model.roi_heads.box,)
 
     fix_eval_modules(eval_modules)
 

@@ -22,12 +22,12 @@ class CombinedROIHeads(torch.nn.ModuleDict):
         if cfg.MODEL.KEYPOINT_ON and cfg.MODEL.ROI_KEYPOINT_HEAD.SHARE_BOX_FEATURE_EXTRACTOR:
             self.keypoint.feature_extractor = self.box.feature_extractor
 
-    def forward(self, features, proposals, targets=None, logger=None):
+    def forward(self, features, detections, targets=None, logger=None):
         losses = {}
-        x, detections, loss_box = self.box(features, proposals, targets)
-        if not self.cfg.MODEL.RELATION_ON:
-            # During the relationship training stage, the bbox_proposal_network should be fixed, and no loss. 
-            losses.update(loss_box)
+        # x, detections, loss_box = self.box(features, proposals, targets)
+        # if not self.cfg.MODEL.RELATION_ON:
+        #     # During the relationship training stage, the bbox_proposal_network should be fixed, and no loss.
+        #     losses.update(loss_box)
 
         if self.cfg.MODEL.ATTRIBUTE_ON:
             # Attribute head don't have a separate feature extractor
