@@ -34,17 +34,31 @@ class GeneralizedRCNN(nn.Module):
         self.roi_heads = build_roi_heads(cfg, out_channels)
         self.preprocess = Preprocessing()
 
-    def instances_to_boxlist(self, instances):
+    def instances_to_boxlist(self, instances, filter=True):
         """
         Convert a list of detectron2 Instances to a list of BoxList
+
+        Args:
+            instances (list[Instances]): a list of detectron2 Instances
+            filter (bool): filter out instances with score < 0.2
         """
+
         boxlists = []
         for instance_dict in instances:
             instance = instance_dict['instances']
-            boxlist = BoxList(instance.pred_boxes.tensor,
+            boxes = instance.pred_boxes.tensor
+            scores = instance.scores
+            labels = instance.pred_classes
+            if filter:
+                inds = scores > 0.2
+                boxes = boxes[inds]
+                scores = scores[inds]
+                labels = labels[inds]
+
+            boxlist = BoxList(boxes,
                               instance.image_size[::-1], mode="xyxy")
-            boxlist.add_field("labels", instance.pred_classes)
-            boxlist.add_field("scores", instance.scores)
+            boxlist.add_field("labels", labels)
+            boxlist.add_field("scores", scores)
             boxlists.append(boxlist)
         return boxlists
 
