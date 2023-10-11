@@ -18,6 +18,7 @@ import time
 import datetime
 
 import torch
+import wandb
 from torch.nn.utils import clip_grad_norm_
 
 from maskrcnn_benchmark.config import cfg
@@ -51,7 +52,7 @@ def train(cfg, local_rank, distributed, logger):
 
     # modules that should be always set in eval mode
     # their eval() method should be called after model.train() is called
-    eval_modules = (model.backbone, model.roi_heads.box,)
+    eval_modules = (model.backbone,)
 
     fix_eval_modules(eval_modules)
 
@@ -102,13 +103,13 @@ def train(cfg, local_rank, distributed, logger):
         cfg, model, optimizer, scheduler, output_dir, save_to_disk, custom_scheduler=True
     )
     # if there is certain checkpoint in output_dir, load it, else load pretrained detector
-    if checkpointer.has_checkpoint():
-        extra_checkpoint_data = checkpointer.load(cfg.MODEL.PRETRAINED_DETECTOR_CKPT,
-                                                  update_schedule=cfg.SOLVER.UPDATE_SCHEDULE_DURING_LOAD)
-        arguments.update(extra_checkpoint_data)
-    else:
-        # load_mapping is only used when we init current model from detection model.
-        checkpointer.load(cfg.MODEL.PRETRAINED_DETECTOR_CKPT, with_optim=False, load_mapping=load_mapping)
+    # if checkpointer.has_checkpoint():
+    #     extra_checkpoint_data = checkpointer.load(cfg.MODEL.PRETRAINED_DETECTOR_CKPT,
+    #                                               update_schedule=cfg.SOLVER.UPDATE_SCHEDULE_DURING_LOAD)
+    #     arguments.update(extra_checkpoint_data)
+    # else:
+    #     # load_mapping is only used when we init current model from detection model.
+    #     checkpointer.load(cfg.MODEL.PRETRAINED_DETECTOR_CKPT, with_optim=False, load_mapping=load_mapping)
     debug_print(logger, 'end load checkpointer')
     train_data_loader = make_data_loader(
         cfg,
@@ -145,6 +146,7 @@ def train(cfg, local_rank, distributed, logger):
         arguments["iteration"] = iteration
 
         model.train()
+        model.backbone.eval()
         fix_eval_modules(eval_modules)
 
         images = images.to(device)
@@ -152,11 +154,17 @@ def train(cfg, local_rank, distributed, logger):
 
         loss_dict = model(images, targets)
 
+
         losses = sum(loss for loss in loss_dict.values())
 
         # reduce losses over all GPUs for logging purposes
         loss_dict_reduced = reduce_loss_dict(loss_dict)
         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
+        wandb_dict = {k: v.detach().cpu().item() for k, v in loss_dict_reduced.items()}
+        wandb_dict['lr'] = optimizer.param_groups[0]["lr"]
+        wandb_dict['iteration'] = iteration
+        wandb_dict['epoch'] = iteration // len(train_data_loader)
+        wandb.log(loss_dict)
         meters.update(loss=losses_reduced, **loss_dict_reduced)
 
         optimizer.zero_grad()
@@ -180,7 +188,7 @@ def train(cfg, local_rank, distributed, logger):
         eta_seconds = meters.time.global_avg * (max_iter - iteration)
         eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
-        if iteration % 200 == 0 or iteration == max_iter:
+        if iteration % 20 == 0 or iteration == max_iter:
             logger.info(
                 meters.delimiter.join(
                     [
@@ -277,6 +285,7 @@ def run_val(cfg, model, val_data_loaders, distributed, logger):
     val_result = float(valid_result.mean())
     del gathered_result, valid_result
     torch.cuda.empty_cache()
+    wandb.log({"val_result": val_result})
     return val_result
 
 
@@ -360,6 +369,13 @@ def main():
     output_dir = cfg.OUTPUT_DIR
     if output_dir:
         mkdir(output_dir)
+
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project="sgvlm-sg",
+        config=vars(cfg),
+        name="sgvlm-sg"
+    )
 
     logger = setup_logger("maskrcnn_benchmark", output_dir, get_rank())
     logger.info("Using {} GPUs".format(num_gpus))

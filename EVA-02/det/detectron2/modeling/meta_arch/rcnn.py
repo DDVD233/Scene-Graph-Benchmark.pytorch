@@ -215,7 +215,7 @@ class GeneralizedRCNN(nn.Module):
             When do_postprocess=True, same as in :meth:`forward`.
             Otherwise, a list[Instances] containing raw network outputs.
         """
-        assert not self.training
+        # assert not self.training
 
         images = self.preprocess_image(batched_inputs)
         features = self.backbone(images.tensor)

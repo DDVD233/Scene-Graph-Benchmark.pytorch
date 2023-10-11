@@ -84,8 +84,8 @@ def build_resnet_fpn_p3p7_backbone(cfg):
 
 
 @registry.BACKBONES.register("EVA")
-def build_resnet_fpn_p3p7_backbone(cfg):
-    model = build_eva2_model()
+def build_eva_backbone(cfg):
+    model = build_eva2_model(cfg)
     return model
 
 

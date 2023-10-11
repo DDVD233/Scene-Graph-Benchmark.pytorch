@@ -12,9 +12,9 @@ from detectron2.config import LazyCall as L
 from fvcore.common.param_scheduler import *
 from detectron2.solver import WarmupParamScheduler
 
-dataloader.train.dataset.names = "vg_train"
+dataloader.train.dataset.names = "moma_train"
 dataloader.train.mapper.recompute_boxes = False
-dataloader.test.dataset.names = "vg_val"
+dataloader.test.dataset.names = "moma_val"
 
 model.backbone.net.img_size = 1536  
 model.backbone.square_pad = 1536  
@@ -39,7 +39,7 @@ optimizer.params.weight_decay_norm = None
 
 train.max_iter = 40000
 train.eval_period = 10000
-train.checkpointer.period = 10000
+train.checkpointer.period = 5000
 
 train.model_ema.enabled=False
 train.model_ema.device="cuda"
@@ -54,9 +54,9 @@ lr_multiplier = L(WarmupParamScheduler)(
     warmup_factor=0.001,
 )
 
-model.roi_heads.update(num_classes=150)
+model.roi_heads.update(num_classes=253)
 model.roi_heads.update(mask_in_features=None)
 
 dataloader.test.num_workers=0
-dataloader.train.total_batch_size=16
+dataloader.train.total_batch_size=20
 

@@ -66,7 +66,10 @@ class CombinedROIHeads(torch.nn.ModuleDict):
             # it may be not safe to share features due to post processing
             # During training, self.box() will return the unaltered proposals as "detections"
             # this makes the API consistent during training and testing
-            x, detections, loss_relation = self.relation(features, detections, targets, logger)
+            if self.cfg.MODEL.ROI_RELATION_HEAD.USE_GT_BOX and targets is not None:
+                x, detections, loss_relation = self.relation(features, targets, targets, logger)
+            else:
+                x, detections, loss_relation = self.relation(features, detections, targets, logger)
             losses.update(loss_relation)
 
         return x, detections, losses

@@ -270,17 +270,33 @@ class MotifPredictor(nn.Module):
         head_rep = edge_rep[:, 0].contiguous().view(-1, self.hidden_dim)
         tail_rep = edge_rep[:, 1].contiguous().view(-1, self.hidden_dim)
 
+
         num_rels = [r.shape[0] for r in rel_pair_idxs]
         num_objs = [len(b) for b in proposals]
         assert len(num_rels) == len(num_objs)
 
-        head_reps = head_rep.split(num_objs, dim=0)
-        tail_reps = tail_rep.split(num_objs, dim=0)
-        obj_preds = obj_preds.split(num_objs, dim=0)
+        head_reps = list(head_rep.split(num_objs, dim=0))
+        tail_reps = list(tail_rep.split(num_objs, dim=0))
+        obj_preds = list(obj_preds.split(num_objs, dim=0))
+
+        i = 0
+        while i < len(num_objs):
+            if obj_preds[i].shape[0] == 0:
+                num_rels.pop(i)
+                num_objs.pop(i)
+                head_reps.pop(i)
+                tail_reps.pop(i)
+                obj_preds.pop(i)
+                rel_pair_idxs.pop(i)
+                proposals.pop(i)
+            else:
+                i += 1
         
         prod_reps = []
         pair_preds = []
         for pair_idx, head_rep, tail_rep, obj_pred in zip(rel_pair_idxs, head_reps, tail_reps, obj_preds):
+            if obj_pred.shape[0] == 0:
+                continue
             prod_reps.append( torch.cat((head_rep[pair_idx[:,0]], tail_rep[pair_idx[:,1]]), dim=-1) )
             pair_preds.append( torch.stack((obj_pred[pair_idx[:,0]], obj_pred[pair_idx[:,1]]), dim=1) )
         prod_rep = cat(prod_reps, dim=0)

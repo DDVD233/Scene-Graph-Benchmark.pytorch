@@ -5,7 +5,8 @@ INPUT:
   MAX_SIZE_TEST: 1000
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  WEIGHT: "catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d"
+  BACKBONE_WEIGHT: '/home/data/models/eva2_vg/model_0019999.pth'
+#  WEIGHT: "catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d"
   BACKBONE:
     CONV_BODY: "EVA" # VGG-16
   RESNETS:
@@ -101,9 +102,9 @@ DATALOADER:
   SIZE_DIVISIBILITY: 32
 SOLVER:
   BIAS_LR_FACTOR: 1
-  BASE_LR: 0.01
+  BASE_LR: 0.0001
   WARMUP_FACTOR: 0.1
-  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY: 0.00001
   MOMENTUM: 0.9
   GRAD_NORM_CLIP: 5.0
   STEPS: (10000, 16000)
@@ -111,6 +112,7 @@ SOLVER:
   VAL_PERIOD: 2000
   CHECKPOINT_PERIOD: 2000
   PRINT_GRAD_FREQ: 4000
+  PRE_VAL: False
   SCHEDULE:
     # the following paramters are only used for WarmupReduceLROnPlateau
     TYPE: "WarmupReduceLROnPlateau"    # WarmupMultiStepLR, WarmupReduceLROnPlateau
@@ -119,7 +121,7 @@ SOLVER:
     COOLDOWN: 0
     FACTOR: 0.1
     MAX_DECAY_STEP: 3
-OUTPUT_DIR: './output/relation_baseline'
+OUTPUT_DIR: './output/sgvlm'
 TEST:
   ALLOW_LOAD_FROM_CACHE: False
   RELATION:

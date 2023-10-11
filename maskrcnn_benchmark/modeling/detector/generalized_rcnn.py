@@ -34,7 +34,7 @@ class GeneralizedRCNN(nn.Module):
         self.roi_heads = build_roi_heads(cfg, out_channels)
         self.preprocess = Preprocessing()
 
-    def instances_to_boxlist(self, instances, filter=True):
+    def instances_to_boxlist(self, instances, filter=True, max_dets=20):
         """
         Convert a list of detectron2 Instances to a list of BoxList
 
@@ -60,6 +60,8 @@ class GeneralizedRCNN(nn.Module):
             boxlist.add_field("labels", labels)
             boxlist.add_field("scores", scores)
             boxlists.append(boxlist)
+        if len(boxlists) > max_dets:
+            boxlists = boxlists[:max_dets]
         return boxlists
 
     def forward(self, images, targets=None, logger=None):
@@ -80,8 +82,9 @@ class GeneralizedRCNN(nn.Module):
         images = to_image_list(images)
         # image_input = self.preprocess(images.tensors)
         image_input = [dict(image=image, im_info=images.image_sizes) for image in images.tensors]
-        features, proposals, detections = self.backbone.inference(image_input)
-        detections_boxlist = self.instances_to_boxlist(detections)
+        with torch.no_grad():
+            features, proposals, detections = self.backbone.inference(image_input)
+        detections_boxlist = self.instances_to_boxlist(detections, filter=False)
         # proposals, proposal_losses = self.rpn(images, features_3d, targets)
         if self.roi_heads:
             x, result, detector_losses = self.roi_heads(features, detections_boxlist, targets, logger)

@@ -160,16 +160,17 @@ def register_datasets(args, cfg):
     from detectron2.data.datasets import load_coco_json
     from detectron2.data import MetadataCatalog
     from pycocotools.coco import COCO
-    # base_dir = '/home/data/cba/'
     base_dir = args.base_dir
     train_dataset = cfg.dataloader.train.dataset.names
     test_dataset = cfg.dataloader.test.dataset.names
     det_dir = base_dir
-    image_root = os.path.join(base_dir, 'VG_100K')
+    image_root = os.path.join(base_dir, 'VG_100K') if "vg" in train_dataset else base_dir
 
     mappings = {
         "vg_train": os.path.join(det_dir, "coco_train.json"),
         "vg_val": os.path.join(det_dir, "coco_test.json"),
+        "moma_train": os.path.join(det_dir, "coco_train.json"),
+        "moma_val": os.path.join(det_dir, "coco_test.json"),
     }
     train_file_path = mappings[train_dataset]
     register_coco_instances(train_dataset, {}, train_file_path, image_root)
