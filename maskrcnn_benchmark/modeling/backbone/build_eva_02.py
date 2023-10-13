@@ -11,7 +11,9 @@ def build_eva2_model(cfg_parent, cfg_path='EVA-02/det/projects/ViTDet/configs/ev
     checkpointer = DetectionCheckpointer(model)
     ckpt_filename = cfg_parent.MODEL.BACKBONE_WEIGHT
     if not os.path.exists(ckpt_filename):
-        raise FileNotFoundError(f'{ckpt_filename} not found')
+        print("Checkpoint not loaded")
+        return model
+        # raise FileNotFoundError(f'{ckpt_filename} not found')
         # download_url_to_file('https://huggingface.co/Yuxin-CV/EVA-02/resolve/main/eva02/det/eva02_L_lvis_sys_o365.pth',
         #                         ckpt_filename)
     checkpointer.load(ckpt_filename)

@@ -111,6 +111,19 @@ class GeneralizedRCNN(nn.Module):
 
         return result
 
+    def get_num_layer(self, var_name=""):
+        if var_name in ("cls_token", "mask_token", "pos_embed"):
+            return 0
+        elif var_name.startswith("patch_embed"):
+            return 0
+        elif var_name.startswith("rel_pos_bias"):
+            return len(self.backbone.backbone.net.blocks) - 1
+        elif var_name.startswith("blocks"):
+            layer_id = int(var_name.split('.')[1])
+            return layer_id + 1
+        else:
+            return len(self.backbone.backbone.net.blocks)
+
     @staticmethod
     def process_result_to_features(result):
         backbone_features = torch.stack([box.get_field('features') for box in result])  # (batch_size, 256, 384, 384)
