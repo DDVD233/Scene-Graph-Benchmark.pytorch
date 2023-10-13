@@ -32,7 +32,7 @@ model.backbone.net.window_block_indexes = (
     list(range(0, 2)) + list(range(3, 5)) + list(range(6, 8)) + list(range(9, 11)) + list(range(12, 14)) + list(range(15, 17)) + list(range(18, 20)) + list(range(21, 23))
 )
 
-optimizer.lr=1e-6
+optimizer.lr=1e-7
 optimizer.params.lr_factor_func = partial(get_vit_lr_decay_rate, lr_decay_rate=0.8, num_layers=24)
 optimizer.params.overrides = {}
 optimizer.params.weight_decay_norm = None

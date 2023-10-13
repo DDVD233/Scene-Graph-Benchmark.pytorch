@@ -244,6 +244,8 @@ class TransformerContext(nn.Module):
         # labels will be used in DecoderRNN during training
         use_gt_label = self.training or self.cfg.MODEL.ROI_RELATION_HEAD.USE_GT_OBJECT_LABEL
         obj_labels = cat([proposal.get_field("labels") for proposal in proposals], dim=0) if use_gt_label else None
+        if obj_labels is not None and obj_labels.dtype != torch.long:
+            obj_labels = obj_labels.long()
 
         # label/logits embedding will be used as input
         if self.cfg.MODEL.ROI_RELATION_HEAD.USE_GT_OBJECT_LABEL:

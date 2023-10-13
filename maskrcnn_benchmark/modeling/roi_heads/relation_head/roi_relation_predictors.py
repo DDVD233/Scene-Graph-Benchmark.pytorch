@@ -34,7 +34,11 @@ class TransformerPredictor(nn.Module):
         self.use_bias = config.MODEL.ROI_RELATION_HEAD.PREDICT_USE_BIAS
 
         # load class dict
-        statistics = get_dataset_statistics(config)
+        if os.path.exists(config.MODEL.STATS_PATH):
+            statistics = torch.load(config.MODEL.STATS_PATH)
+        else:
+            statistics = get_dataset_statistics(config)
+            torch.save(statistics, config.MODEL.STATS_PATH)
         obj_classes, rel_classes, att_classes = statistics['obj_classes'], statistics['rel_classes'], statistics['att_classes']
         assert self.num_obj_cls==len(obj_classes)
         assert self.num_att_cls==len(att_classes)
@@ -215,7 +219,11 @@ class MotifPredictor(nn.Module):
         self.use_bias = config.MODEL.ROI_RELATION_HEAD.PREDICT_USE_BIAS
 
         # load class dict
-        statistics = get_dataset_statistics(config)
+        if os.path.exists(config.MODEL.STATS_PATH):
+            statistics = torch.load(config.MODEL.STATS_PATH)
+        else:
+            statistics = get_dataset_statistics(config)
+            torch.save(statistics, config.MODEL.STATS_PATH)
         obj_classes, rel_classes, att_classes = statistics['obj_classes'], statistics['rel_classes'], statistics['att_classes']
         assert self.num_obj_cls==len(obj_classes)
         assert self.num_att_cls==len(att_classes)
@@ -464,7 +472,11 @@ class CausalAnalysisPredictor(nn.Module):
         num_inputs = in_channels
 
         # load class dict
-        statistics = get_dataset_statistics(config)
+        if os.path.exists(config.MODEL.STATS_PATH):
+            statistics = torch.load(config.MODEL.STATS_PATH)
+        else:
+            statistics = get_dataset_statistics(config)
+            torch.save(statistics, config.MODEL.STATS_PATH)
         obj_classes, rel_classes = statistics['obj_classes'], statistics['rel_classes']
         assert self.num_obj_cls==len(obj_classes)
         assert self.num_rel_cls==len(rel_classes)
@@ -553,6 +565,8 @@ class CausalAnalysisPredictor(nn.Module):
         pair_obj_probs = []
         pair_bboxs_info = []
         for pair_idx, head_rep, tail_rep, obj_pred, obj_box, obj_prob in zip(rel_pair_idxs, head_reps, tail_reps, obj_preds, obj_boxs, obj_prob_list):
+            if obj_pred.shape[0] == 0:
+                continue
             if self.use_vtranse:
                 ctx_reps.append( head_rep[pair_idx[:,0]] - tail_rep[pair_idx[:,1]] )
             else:
@@ -601,6 +615,7 @@ class CausalAnalysisPredictor(nn.Module):
             post_ctx_rep = post_ctx_rep * self.spt_emb(pair_bbox)
 
         rel_dists = self.calculate_logits(union_features, post_ctx_rep, pair_pred, use_label_dist=False)
+        num_rels = [rel if obj != 0 else 0 for obj, rel in zip(num_objs, num_rels)]
         rel_dist_list = rel_dists.split(num_rels, dim=0)
 
         add_losses = {}
