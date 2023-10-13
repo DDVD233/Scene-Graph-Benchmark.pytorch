@@ -127,7 +127,7 @@ def train(cfg, local_rank, distributed, logger):
 
     if cfg.SOLVER.PRE_VAL:
         logger.info("Validate before training")
-        run_val(cfg, model, val_data_loaders, distributed, logger)
+        run_val(cfg, model, val_data_loaders, distributed, logger, local_rank)
 
     logger.info("Start training")
     meters = MetricLogger(delimiter="  ")
@@ -167,7 +167,8 @@ def train(cfg, local_rank, distributed, logger):
         wandb_dict['lr'] = optimizer.param_groups[0]["lr"]
         wandb_dict['iteration'] = iteration
         wandb_dict['epoch'] = iteration // len(train_data_loader)
-        wandb.log(loss_dict)
+        if local_rank == 0:
+            wandb.log(wandb_dict)
         meters.update(loss=losses_reduced, **loss_dict_reduced)
 
         optimizer.zero_grad()
@@ -218,7 +219,7 @@ def train(cfg, local_rank, distributed, logger):
         val_result = None  # used for scheduler updating
         if cfg.SOLVER.TO_VAL and iteration % cfg.SOLVER.VAL_PERIOD == 0:
             logger.info("Start validating")
-            val_result = run_val(cfg, model, val_data_loaders, distributed, logger)
+            val_result = run_val(cfg, model, val_data_loaders, distributed, logger, local_rank)
             logger.info("Validation Result: %.4f" % val_result)
 
         # scheduler should be called after optimizer.step() in pytorch>=1.1.0
@@ -248,7 +249,7 @@ def fix_eval_modules(eval_modules):
         # DO NOT use module.eval(), otherwise the module will be in the test mode, i.e., all self.training condition is set to False
 
 
-def run_val(cfg, model, val_data_loaders, distributed, logger):
+def run_val(cfg, model, val_data_loaders, distributed, logger, local_rank):
     if distributed:
         model = model.module
     torch.cuda.empty_cache()
@@ -288,7 +289,8 @@ def run_val(cfg, model, val_data_loaders, distributed, logger):
     val_result = float(valid_result.mean())
     del gathered_result, valid_result
     torch.cuda.empty_cache()
-    wandb.log({"val_result": val_result})
+    if local_rank == 0:
+        wandb.log({"val_result": val_result})
     return val_result
 
 
