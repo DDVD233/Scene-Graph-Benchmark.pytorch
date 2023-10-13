@@ -361,7 +361,7 @@ def main():
     if args.distributed:
         torch.cuda.set_device(args.local_rank)
         torch.distributed.init_process_group(
-            backend="nccl", init_method="env://"
+            backend="gloo", init_method="env://"
         )
         synchronize()
     cfg.set_new_allowed(True)
@@ -373,12 +373,13 @@ def main():
     if output_dir:
         mkdir(output_dir)
 
-    wandb.init(
-        # set the wandb project where this run will be logged
-        project="sgvlm-sg",
-        config=vars(cfg),
-        name="sgvlm-sg"
-    )
+    if args.local_rank == 0:
+        wandb.init(
+            # set the wandb project where this run will be logged
+            project="sgvlm-sg",
+            config=vars(cfg),
+            name="sgvlm-sg"
+        )
 
     logger = setup_logger("maskrcnn_benchmark", output_dir, get_rank())
     logger.info("Using {} GPUs".format(num_gpus))
