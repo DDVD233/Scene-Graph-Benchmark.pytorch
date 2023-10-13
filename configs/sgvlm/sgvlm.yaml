@@ -102,6 +102,7 @@ DATASETS:
   TEST: ("VG_stanford_filtered_with_attribute_test",)
 DATALOADER:
   SIZE_DIVISIBILITY: 32
+  NUM_WORKERS: 14
 SOLVER:
   BIAS_LR_FACTOR: 1
   BASE_LR: 0.0001
