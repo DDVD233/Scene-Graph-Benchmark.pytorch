@@ -52,9 +52,9 @@ def train(cfg, local_rank, distributed, logger):
 
     # modules that should be always set in eval mode
     # their eval() method should be called after model.train() is called
-    eval_modules = (model.backbone,)
-
-    fix_eval_modules(eval_modules)
+    # eval_modules = (model.backbone,)
+    #
+    # fix_eval_modules(eval_modules)
 
     # NOTE, we slow down the LR of the layers start with the names in slow_heads
     if cfg.MODEL.ROI_RELATION_HEAD.PREDICTOR == "IMPPredictor":
@@ -146,8 +146,11 @@ def train(cfg, local_rank, distributed, logger):
         arguments["iteration"] = iteration
 
         model.train()
-        model.backbone.eval()
-        fix_eval_modules(eval_modules)
+        if isinstance(model, torch.nn.parallel.DistributedDataParallel):
+            model.module.backbone.eval()
+        else:
+            model.backbone.eval()
+        # fix_eval_modules(eval_modules)
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]
@@ -336,7 +339,7 @@ def main():
         help="path to config file",
         type=str,
     )
-    parser.add_argument("--local_rank", type=int, default=0)
+    parser.add_argument("--local-rank", type=int, default=0)
     parser.add_argument(
         "--skip-test",
         dest="skip_test",
