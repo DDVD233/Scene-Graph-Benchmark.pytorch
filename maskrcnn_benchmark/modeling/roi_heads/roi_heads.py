@@ -24,15 +24,6 @@ class CombinedROIHeads(torch.nn.ModuleDict):
 
     def forward(self, features, detections, targets=None, logger=None):
         losses = {}
-        # x, detections, loss_box = self.box(features, proposals, targets)
-        # if not self.cfg.MODEL.RELATION_ON:
-        #     # During the relationship training stage, the bbox_proposal_network should be fixed, and no loss.
-        #     losses.update(loss_box)
-
-        if self.cfg.MODEL.ATTRIBUTE_ON:
-            # Attribute head don't have a separate feature extractor
-            z, detections, loss_attribute = self.attribute(features, detections, targets)
-            losses.update(loss_attribute)
 
         if self.cfg.MODEL.RELATION_ON:
             # it may be not safe to share features due to post processing
