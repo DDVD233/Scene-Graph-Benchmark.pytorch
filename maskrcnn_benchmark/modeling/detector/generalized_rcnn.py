@@ -92,7 +92,9 @@ class GeneralizedRCNN(nn.Module):
         with torch.no_grad():
             features, proposals, detections = self.backbone.inference(image_input)
         detections_boxlist = self.instances_to_boxlist(detections, features, filter=False)
+        assert len(detections_boxlist) == len(images.tensors)
         x, result, detector_losses = self.roi_heads(features, detections_boxlist, targets, logger)
+        assert len(result) == len(images.tensors)
         box_len = [len(box) for box in result]
         split_x = torch.split(x, box_len, dim=0)
         for index, box in enumerate(result):
@@ -102,7 +104,6 @@ class GeneralizedRCNN(nn.Module):
             losses = {}
             losses.update(detector_losses)
             return losses
-
         return result
 
     def get_num_layer(self, var_name=""):
