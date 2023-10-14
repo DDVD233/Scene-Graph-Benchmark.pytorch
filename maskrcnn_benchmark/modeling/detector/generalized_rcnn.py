@@ -45,7 +45,8 @@ class GeneralizedRCNN(nn.Module):
             instances (list[Instances]): a list of detectron2 Instances
             filter (bool): filter out instances with score < 0.2
         """
-
+        feature = features[0]
+        assert len(feature) == len(instances)
         boxlists = []
         for index, instance_dict in enumerate(instances):
             instance = instance_dict['instances']
@@ -62,7 +63,7 @@ class GeneralizedRCNN(nn.Module):
                               instance.image_size[::-1], mode="xyxy")
             boxlist.add_field("labels", labels)
             boxlist.add_field("scores", scores)
-            boxlist.add_field("features", features[0][index])
+            boxlist.add_field("features", feature[index])
             boxlists.append(boxlist)
         if len(boxlists) > max_dets:
             boxlists = boxlists[:max_dets]
