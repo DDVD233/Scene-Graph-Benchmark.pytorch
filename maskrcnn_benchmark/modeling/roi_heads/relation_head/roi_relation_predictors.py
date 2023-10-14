@@ -290,13 +290,10 @@ class MotifPredictor(nn.Module):
         i = 0
         while i < len(num_objs):
             if obj_preds[i].shape[0] == 0:
-                num_rels.pop(i)
-                num_objs.pop(i)
-                head_reps.pop(i)
-                tail_reps.pop(i)
-                obj_preds.pop(i)
-                rel_pair_idxs.pop(i)
-                proposals.pop(i)
+                obj_preds[i] = torch.zeros((1, 1), device=obj_preds[0].device, dtype=obj_preds[0].dtype)
+                head_reps[i] = torch.zeros((1, head_rep.shape[1]), device=head_rep.device, dtype=head_rep.dtype)
+                tail_reps[i] = torch.zeros((1, tail_rep.shape[1]), device=tail_rep.device, dtype=tail_rep.dtype)
+                num_objs[i] = 1
             else:
                 i += 1
         
