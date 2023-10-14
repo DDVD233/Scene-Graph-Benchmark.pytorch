@@ -86,38 +86,16 @@ class GeneralizedRCNN(nn.Module):
         start_time = time.time()
 
         images = to_image_list(images)
-        print(f"Time for 'to_image_list': {time.time() - start_time:.4f} seconds")
-        start_time = time.time()
-
+        # image_input = self.preprocess(images.tensors)
         image_input = [dict(image=image, im_info=images.image_sizes) for image in images.tensors]
-        print(f"Time for 'image_input': {time.time() - start_time:.4f} seconds")
-        start_time = time.time()
-
         with torch.no_grad():
             features, proposals, detections = self.backbone.inference(image_input)
-        print(f"Time for 'backbone.inference': {time.time() - start_time:.4f} seconds")
-        start_time = time.time()
-
         detections_boxlist = self.instances_to_boxlist(detections, features, filter=False)
-        print(f"Time for 'instances_to_boxlist': {time.time() - start_time:.4f} seconds")
-        start_time = time.time()
-
         x, result, detector_losses = self.roi_heads(features, detections_boxlist, targets, logger)
-        print(f"Time for 'roi_heads': {time.time() - start_time:.4f} seconds")
-        start_time = time.time()
-
         box_len = [len(box) for box in result]
-        print(f"Time for 'box_len': {time.time() - start_time:.4f} seconds")
-        start_time = time.time()
-
         split_x = torch.split(x, box_len, dim=0)
-        print(f"Time for 'torch.split': {time.time() - start_time:.4f} seconds")
-        start_time = time.time()
-
         for index, box in enumerate(result):
             box.add_field('relation_features', split_x[index])
-        print(f"Time for loop 'add_field': {time.time() - start_time:.4f} seconds")
-        start_time = time.time()
 
         if self.training:
             losses = {}
