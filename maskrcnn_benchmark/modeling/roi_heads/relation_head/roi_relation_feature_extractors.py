@@ -62,7 +62,7 @@ class RelationFeatureExtractor(nn.Module):
         rect_inputs = []
         for proposal, rel_pair_idx in zip(proposals, rel_pair_idxs):
             if proposal.bbox.shape[0] == 0:
-                continue
+                proposal.bbox = torch.zeros((1,4), device=device, dtype=torch.float32)
             head_proposal = proposal[rel_pair_idx[:, 0]]
             tail_proposal = proposal[rel_pair_idx[:, 1]]
             union_proposal = boxlist_union(head_proposal, tail_proposal)
