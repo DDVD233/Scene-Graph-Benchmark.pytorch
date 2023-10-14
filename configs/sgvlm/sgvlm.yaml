@@ -6,7 +6,7 @@ INPUT:
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
   BACKBONE_WEIGHT: '/home/data/models/eva2_vg/model_0019999.pth'
-  WEIGHT: "/home/data/models/sgvlm_sg/model_0008000.pth"
+  WEIGHT: "/home/dvd/data/models/sgvlm_trans/model_0002000.pth"
   STATS_PATH: "/home/data/datasets/vg/stats.pkl"
 #  WEIGHT: "catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d"
   BACKBONE:
@@ -73,8 +73,8 @@ MODEL:
     #################### Select Relationship Model ####################
     #PREDICTOR: "MotifPredictor"
     #PREDICTOR: "VCTreePredictor"
-    #PREDICTOR: "TransformerPredictor"
-    PREDICTOR: "CausalAnalysisPredictor"
+    PREDICTOR: "TransformerPredictor"
+#    PREDICTOR: "CausalAnalysisPredictor"
     ################# Parameters for Motif Predictor ##################
     CONTEXT_OBJ_LAYER: 1
     CONTEXT_REL_LAYER: 1
