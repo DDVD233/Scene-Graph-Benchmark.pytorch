@@ -34,7 +34,7 @@ class GeneralizedRCNN(nn.Module):
         out_channels = list(shapes.values())[0].channels
         self.roi_heads = build_roi_heads(cfg, out_channels)
         self.preprocess = Preprocessing()
-        self.num_features = 512
+        self.num_features = 400
 
     def instances_to_boxlist(self, instances, features, filter=True, max_dets=20):
         """
