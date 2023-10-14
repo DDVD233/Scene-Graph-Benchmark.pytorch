@@ -127,13 +127,13 @@ class GeneralizedRCNN(nn.Module):
     @staticmethod
     def process_result_to_features(result):
         backbone_features = torch.stack([box.get_field('features') for box in result])  # (batch_size, 256, 384, 384)
-        features_chunk = torch.mean(backbone_features, dim=(2, 3))  # (batch_size, 256)
+        features_chunk = torch.mean(backbone_features, dim=2)  # (batch_size, 256, 384)
         relation_features = [box.get_field('relation_features') for box in result]  # (batch_size, n, 4096)
         relation_features = [torch.mean(relation_feature, dim=0) for relation_feature in relation_features]
         input_tensor = torch.stack(relation_features, dim=0)  # (batch_size, 4096)
-        relation_chunk = F.avg_pool1d(input_tensor, kernel_size=16, stride=16).squeeze(-1)  # (batch_size, 256)
+        relation_chunk = torch.reshape(input_tensor, (-1, 256, 16))  # (batch_size, 256, 16)
         # normalize
         features_chunk = F.normalize(features_chunk, dim=-1)
         relation_chunk = F.normalize(relation_chunk, dim=-1)
-        features_chunk = torch.cat((features_chunk, relation_chunk), dim=-1)  # (batch_size, 512)
+        features_chunk = torch.cat((features_chunk, relation_chunk), dim=-1)  # (batch_size, 256, 400)
         return features_chunk
