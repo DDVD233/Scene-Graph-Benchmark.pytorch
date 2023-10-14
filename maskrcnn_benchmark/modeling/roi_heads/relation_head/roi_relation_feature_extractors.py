@@ -11,6 +11,7 @@ from maskrcnn_benchmark.modeling.make_layers import make_fc
 from maskrcnn_benchmark.structures.boxlist_ops import boxlist_union, boxlist_intersection
 from maskrcnn_benchmark.modeling.roi_heads.box_head.roi_box_feature_extractors import make_roi_box_feature_extractor
 from maskrcnn_benchmark.modeling.roi_heads.attribute_head.roi_attribute_feature_extractors import make_roi_attribute_feature_extractor
+from maskrcnn_benchmark.structures.bounding_box import BoxList
 
 
 
@@ -62,7 +63,8 @@ class RelationFeatureExtractor(nn.Module):
         rect_inputs = []
         for proposal, rel_pair_idx in zip(proposals, rel_pair_idxs):
             if proposal.bbox.shape[0] == 0:
-                proposal.bbox = torch.zeros((1,4), device=device, dtype=torch.float32)
+                proposal.bbox = torch.zeros((1,4), device=device)
+                rel_pair_idx = torch.zeros((1,2), device=device, dtype=torch.long)
             head_proposal = proposal[rel_pair_idx[:, 0]]
             tail_proposal = proposal[rel_pair_idx[:, 1]]
             union_proposal = boxlist_union(head_proposal, tail_proposal)

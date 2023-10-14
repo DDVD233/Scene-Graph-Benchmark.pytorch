@@ -53,6 +53,10 @@ class GeneralizedRCNN(nn.Module):
             boxes = instance.pred_boxes.tensor
             scores = instance.scores
             labels = instance.pred_classes
+            if len(boxes) == 0:  # We need to add a dummy entry for the batch size
+                boxes = torch.zeros((1, 4), device=boxes.device)
+                scores = torch.zeros((1,), device=scores.device)
+                labels = torch.zeros((1,), device=labels.device)
             if filter:
                 inds = scores > 0.2
                 boxes = boxes[inds]
