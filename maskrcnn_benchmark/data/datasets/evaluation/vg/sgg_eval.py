@@ -476,13 +476,13 @@ def _triplet(relations, classes, boxes, predicate_scores=None, class_scores=None
         triplets_scores (#rel, 3) : (sub_score, pred_score, ob_score)
     """
     sub_id, ob_id, pred_label = relations[:, 0], relations[:, 1], relations[:, 2]
-    triplets = np.column_stack((classes[sub_id], pred_label, classes[ob_id]))
+    triplets = np.column_stack((classes.get(sub_id, 0), pred_label, classes.get(ob_id, 0)))
     triplet_boxes = np.column_stack((boxes[sub_id], boxes[ob_id]))
 
     triplet_scores = None
     if predicate_scores is not None and class_scores is not None:
         triplet_scores = np.column_stack((
-            class_scores[sub_id], predicate_scores, class_scores[ob_id],
+            class_scores.get(sub_id, 0), predicate_scores, class_scores[ob_id],
         ))
 
     return triplets, triplet_boxes, triplet_scores

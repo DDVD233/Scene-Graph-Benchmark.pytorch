@@ -14,6 +14,7 @@ from ..roi_heads.roi_heads import build_roi_heads
 from ..preprocessing import Preprocessing
 from maskrcnn_benchmark.structures.bounding_box import BoxList
 import torch.nn.functional as F
+import time
 
 
 class GeneralizedRCNN(nn.Module):
@@ -82,31 +83,45 @@ class GeneralizedRCNN(nn.Module):
         """
         if self.training and targets is None:
             raise ValueError("In training mode, targets should be passed")
+        start_time = time.time()
+
         images = to_image_list(images)
-        # image_input = self.preprocess(images.tensors)
+        print(f"Time for 'to_image_list': {time.time() - start_time:.4f} seconds")
+        start_time = time.time()
+
         image_input = [dict(image=image, im_info=images.image_sizes) for image in images.tensors]
+        print(f"Time for 'image_input': {time.time() - start_time:.4f} seconds")
+        start_time = time.time()
+
         with torch.no_grad():
             features, proposals, detections = self.backbone.inference(image_input)
+        print(f"Time for 'backbone.inference': {time.time() - start_time:.4f} seconds")
+        start_time = time.time()
+
         detections_boxlist = self.instances_to_boxlist(detections, features, filter=False)
-        # proposals, proposal_losses = self.rpn(images, features_3d, targets)
-        if self.roi_heads:
-            x, result, detector_losses = self.roi_heads(features, detections_boxlist, targets, logger)
-            box_len = [len(box) for box in result]
-            split_x = torch.split(x, box_len, dim=0)
-            for index, box in enumerate(result):
-                box.add_field('relation_features', split_x[index])
-        else:
-            # RPN-only models don't have roi_heads
-            x = features
-            result = proposals
-            detector_losses = {}
+        print(f"Time for 'instances_to_boxlist': {time.time() - start_time:.4f} seconds")
+        start_time = time.time()
+
+        x, result, detector_losses = self.roi_heads(features, detections_boxlist, targets, logger)
+        print(f"Time for 'roi_heads': {time.time() - start_time:.4f} seconds")
+        start_time = time.time()
+
+        box_len = [len(box) for box in result]
+        print(f"Time for 'box_len': {time.time() - start_time:.4f} seconds")
+        start_time = time.time()
+
+        split_x = torch.split(x, box_len, dim=0)
+        print(f"Time for 'torch.split': {time.time() - start_time:.4f} seconds")
+        start_time = time.time()
+
+        for index, box in enumerate(result):
+            box.add_field('relation_features', split_x[index])
+        print(f"Time for loop 'add_field': {time.time() - start_time:.4f} seconds")
+        start_time = time.time()
 
         if self.training:
             losses = {}
             losses.update(detector_losses)
-            # if not self.cfg.MODEL.RELATION_ON:
-            #     # During the relationship training stage, the rpn_head should be fixed, and no loss.
-            #     losses.update(proposal_losses)
             return losses
 
         return result
