@@ -58,12 +58,13 @@ class PostProcessor(nn.Module):
             finetune_obj_logits = refine_logits
 
         results = []
-        for i, (rel_logit, obj_logit, rel_pair_idx, box) in enumerate(zip(
-            relation_logits, finetune_obj_logits, rel_pair_idxs, boxes
-        )):
-            if self.attribute_on:
-                att_logit = finetune_att_logits[i]
-                att_prob = torch.sigmoid(att_logit)
+        # for i, (rel_logit, obj_logit, rel_pair_idx, box) in enumerate(zip(
+        #     relation_logits, finetune_obj_logits, rel_pair_idxs, boxes
+        # )):
+        for i, box in enumerate(boxes):
+            rel_logit = relation_logits[i] if len(relation_logits) > i else relation_logits[-1]
+            obj_logit = finetune_obj_logits[i] if len(finetune_obj_logits) > i else finetune_obj_logits[-1]
+            rel_pair_idx = rel_pair_idxs[i] if len(rel_pair_idxs) > i else rel_pair_idxs[-1]
             obj_class_prob = F.softmax(obj_logit, -1)
             obj_class_prob[:, 0] = 0  # set background score to 0
             num_obj_bbox = obj_class_prob.shape[0]
@@ -92,9 +93,6 @@ class PostProcessor(nn.Module):
                 boxlist = BoxList(box.get_field('boxes_per_cls')[torch.arange(batch_size, device=device), regressed_box_idxs], box.size, 'xyxy')
             boxlist.add_field('pred_labels', obj_class) # (#obj, )
             boxlist.add_field('pred_scores', obj_scores) # (#obj, )
-
-            if self.attribute_on:
-                boxlist.add_field('pred_attributes', att_prob)
             
             # sorting triples according to score production
             if obj_scores.shape[0] > 0:
@@ -119,6 +117,7 @@ class PostProcessor(nn.Module):
             # the boxlist has such an element, the slicing operation should be forbidden.)
             # it is not safe to add fields about relation into boxlist!
             results.append(boxlist)
+        assert len(results) == len(boxes)
         return results
 
 
