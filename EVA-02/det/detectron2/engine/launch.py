@@ -4,6 +4,7 @@ from datetime import timedelta
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
+import torch.backends.cudnn as cudnn
 
 from detectron2.utils import comm
 
@@ -92,6 +93,7 @@ def _distributed_worker(
     args,
     timeout=DEFAULT_TIMEOUT,
 ):
+    cudnn.benchmark = False
     assert torch.cuda.is_available(), "cuda is not available. Please check your installation."
     global_rank = machine_rank * num_gpus_per_machine + local_rank
     try:
