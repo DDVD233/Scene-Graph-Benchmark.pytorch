@@ -10,6 +10,7 @@ from maskrcnn_benchmark.structures.image_list import to_image_list
 
 from ..backbone import build_backbone
 from ..rpn.rpn import build_rpn
+from ..backbone.eva_vit import create_eva_vit_g
 from ..roi_heads.roi_heads import build_roi_heads
 from ..preprocessing import Preprocessing
 from maskrcnn_benchmark.structures.bounding_box import BoxList
@@ -31,13 +32,15 @@ class GeneralizedRCNN(nn.Module):
         super(GeneralizedRCNN, self).__init__()
         self.cfg = cfg.clone()
         self.backbone = build_backbone(cfg)
+        self.patch_backbone = create_eva_vit_g()
         shapes = self.backbone.backbone.output_shape()
         out_channels = list(shapes.values())[0].channels
         self.roi_heads = build_roi_heads(cfg, out_channels)
         self.preprocess = Preprocessing()
         self.num_features = 256
+        self.pooling = nn.AdaptiveAvgPool1d(2560)
 
-    def instances_to_boxlist(self, instances, features, filter=True, max_dets=20):
+    def instances_to_boxlist(self, instances, features, patch_features, filter=True, max_dets=20):
         """
         Convert a list of detectron2 Instances to a list of BoxList
 
@@ -45,7 +48,7 @@ class GeneralizedRCNN(nn.Module):
             instances (list[Instances]): a list of detectron2 Instances
             filter (bool): filter out instances with score < 0.2
         """
-        feature = features[0]
+        feature = features[-1]
         assert len(feature) == len(instances)
         boxlists = []
         for index, instance_dict in enumerate(instances):
@@ -68,6 +71,7 @@ class GeneralizedRCNN(nn.Module):
             boxlist.add_field("labels", labels)
             boxlist.add_field("scores", scores)
             boxlist.add_field("features", feature[index])
+            boxlist.add_field("patch_features", patch_features[index])
             boxlists.append(boxlist)
         if len(boxlists) > max_dets:
             boxlists = boxlists[:max_dets]
@@ -95,7 +99,11 @@ class GeneralizedRCNN(nn.Module):
         image_input = [dict(image=image, im_info=images.image_sizes) for image in images.tensors]
         with torch.no_grad():
             features, proposals, detections = self.backbone.inference(image_input)
-        detections_boxlist = self.instances_to_boxlist(detections, features, filter=False)
+            # Crop & resize image tensors to bsx224x224 before feeding into patch_backbone
+            cropped_image = F.interpolate(images.tensors, size=(224, 224),
+                                          mode='bilinear', align_corners=False)
+            patch_features = self.patch_backbone(cropped_image)
+        detections_boxlist = self.instances_to_boxlist(detections, features, patch_features, filter=False)
         assert len(detections_boxlist) == len(images.tensors)
         x, result, detector_losses = self.roi_heads(features, detections_boxlist, targets, logger)
         assert len(result) == len(images.tensors)
@@ -123,17 +131,18 @@ class GeneralizedRCNN(nn.Module):
         else:
             return len(self.backbone.backbone.net.blocks)
 
-    @staticmethod
-    def process_result_to_features(result):
-        backbone_features = torch.stack([box.get_field('features') for box in result])  # (batch_size, 256, 384, 384)
-        features_chunk = torch.mean(backbone_features, dim=2)  # (batch_size, 256, 384)
+    def process_result_to_features(self, result):
+        backbone_features = torch.stack([box.get_field('features') for box in result])  # (batch_size, 256, 24, 24)
+        patch_backbone_result = torch.stack([box.get_field('patch_features') for box in result]) # (batch_size, 257, 1408)
+        features_chunk = torch.mean(backbone_features, dim=(2, 3))  # (batch_size, 256)
         relation_features = [box.get_field('relation_features') for box in result]  # (batch_size, n, 4096)
         relation_features = [torch.mean(relation_feature, dim=0) for relation_feature in relation_features]
-        input_tensor = torch.stack(relation_features, dim=0)  # (batch_size, 4096)
-        relation_chunk = torch.reshape(input_tensor, (-1, 256, 16))  # (batch_size, 256, 16)
+        relation_chunk = torch.stack(relation_features, dim=0)  # (batch_size, 4096)
+        relation_chunk = self.pooling(relation_chunk)  # (batch_size, 2560)
         # normalize
         features_chunk = F.normalize(features_chunk, dim=-1)
         relation_chunk = F.normalize(relation_chunk, dim=-1)
-        features_chunk = torch.cat((features_chunk, relation_chunk), dim=-1)  # (batch_size, 256, 400)
-        features_chunk = features_chunk.permute(0, 2, 1)  # (batch_size, 400, 256)
-        return features_chunk
+        features_chunk = torch.cat((features_chunk, relation_chunk), dim=-1)  # (batch_size, 2816)
+        features_chunk = torch.reshape(features_chunk, (features_chunk.shape[0], 2, 1408))  # (batch_size, 2, 1408)
+        final_chunk = torch.cat((features_chunk, patch_backbone_result), dim=1)  # (batch_size, 259, 1408)
+        return final_chunk
