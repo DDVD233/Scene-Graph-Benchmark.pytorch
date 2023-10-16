@@ -35,7 +35,7 @@ class GeneralizedRCNN(nn.Module):
         out_channels = list(shapes.values())[0].channels
         self.roi_heads = build_roi_heads(cfg, out_channels)
         self.preprocess = Preprocessing()
-        self.num_features = 400
+        self.num_features = 256
 
     def instances_to_boxlist(self, instances, features, filter=True, max_dets=20):
         """
@@ -135,4 +135,5 @@ class GeneralizedRCNN(nn.Module):
         features_chunk = F.normalize(features_chunk, dim=-1)
         relation_chunk = F.normalize(relation_chunk, dim=-1)
         features_chunk = torch.cat((features_chunk, relation_chunk), dim=-1)  # (batch_size, 256, 400)
+        features_chunk = features_chunk.permute(0, 2, 1)  # (batch_size, 400, 256)
         return features_chunk
