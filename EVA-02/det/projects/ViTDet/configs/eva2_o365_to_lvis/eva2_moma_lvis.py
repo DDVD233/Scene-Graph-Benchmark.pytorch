@@ -70,7 +70,7 @@ model.roi_heads.update(
 )
 
 dataloader.test.num_workers = 0
-dataloader.train.total_batch_size = 40
+dataloader.train.total_batch_size = 32
 
 optimizer.lr = 1e-6
 train.model_ema.enabled = False
