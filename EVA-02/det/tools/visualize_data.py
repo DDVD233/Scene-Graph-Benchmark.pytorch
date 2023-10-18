@@ -127,7 +127,7 @@ if __name__ == "__main__":
                 )
                 output(vis, str(per_image["image_id"]) + ".jpg")
     else:
-        dicts = list(chain.from_iterable([DatasetCatalog.get(cfg.dataloader.train.dataset.names)]))
+        dicts = list(chain.from_iterable([DatasetCatalog.get(cfg.dataloader.test.dataset.names)]))
         # if cfg.MODEL.KEYPOINT_ON:
         #     dicts = filter_images_with_few_keypoints(dicts, 1)
         for dic in tqdm.tqdm(dicts):

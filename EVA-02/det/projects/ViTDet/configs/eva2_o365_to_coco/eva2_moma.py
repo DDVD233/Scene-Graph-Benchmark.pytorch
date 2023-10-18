@@ -38,7 +38,7 @@ optimizer.params.overrides = {}
 optimizer.params.weight_decay_norm = None
 
 train.max_iter = 40000
-train.eval_period = 5000
+train.eval_period = 1000
 train.checkpointer.period = 1000
 
 train.model_ema.enabled=False
