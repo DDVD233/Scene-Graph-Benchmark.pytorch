@@ -112,6 +112,11 @@ class DatasetCatalog(object):
             "dict_file": "vg/VG-SGG-dicts.json",
             "image_file": "vg/image_data.json",
         },
+        "moma": {
+            "img_dir": "moma",
+            "roidb_file": "moma/moma-SGG.h5",
+            "image_file": "moma/image_data.json",
+        },
         "VG_stanford_filtered_with_attribute": {
             "img_dir": "vg/VG_100K",
             "roidb_file": "vg/VG-SGG-with-attri.h5",
@@ -145,7 +150,7 @@ class DatasetCatalog(object):
                 factory="PascalVOCDataset",
                 args=args,
             )
-        elif ("VG" in name) or ('GQA' in name):
+        elif ("VG" in name) or ('GQA' in name) or ('moma' in name):
             # name should be something like VG_stanford_filtered_train
             p = name.rfind("_")
             name, split = name[:p], name[p+1:]
