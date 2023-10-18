@@ -153,7 +153,7 @@ class GeneralizedRCNN(nn.Module):
 
         patch_backbone_result = torch.stack([box.get_field('patch_features') for box in result]) # (batch_size, 257, 1408)
         features_chunk = torch.reshape(backbone_features, (backbone_features.shape[0], -1))  # (batch_size, 256 * 24 * 24)
-        features_chunk = self.pooling(features_chunk).unsqueeze()  # (batch_size, 1, 1408)
+        features_chunk = self.pooling(features_chunk).unsqueeze(1)  # (batch_size, 1, 1408)
 
         relation_features = [self.process_relation_features(box.get_field('relation_features'))
                              for box in result]  # (batch_size, 4, 4096)
