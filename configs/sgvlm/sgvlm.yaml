@@ -6,6 +6,7 @@ INPUT:
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
   BACKBONE_WEIGHT: '/home/data/models/eva2_vg/model_0019999.pth'
+  BACKBONE_CONFIG: 'EVA-02/det/projects/ViTDet/configs/eva2_o365_to_coco/eva2_vg.py'
   WEIGHT: "/home/data/models/motif-precls-exmp/model_0004000.pth"
   STATS_PATH: "/home/data/datasets/vg/stats.pkl"
 #  WEIGHT: "catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d"

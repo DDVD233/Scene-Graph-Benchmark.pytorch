@@ -2,10 +2,12 @@ from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import LazyConfig, instantiate
 import os
 from torch.hub import download_url_to_file
+import logging
 
 
-def build_eva2_model(cfg_parent, cfg_path='EVA-02/det/projects/ViTDet/configs/eva2_o365_to_coco/'
-                              'eva2_vg.py'):
+def build_eva2_model(cfg_parent):
+    cfg_path = cfg_parent.MODEL.BACKBONE_CONFIG
+    logging.info(f"Loading model from {cfg_path}")
     cfg = LazyConfig.load(cfg_path)
     model = instantiate(cfg.model)
     checkpointer = DetectionCheckpointer(model)
@@ -15,6 +17,6 @@ def build_eva2_model(cfg_parent, cfg_path='EVA-02/det/projects/ViTDet/configs/ev
             print("Checkpoint not loaded")
             return model
         checkpointer.load(ckpt_filename)
-    except:
-        pass
+    except Exception as e:
+        logging.warning(e)
     return model
