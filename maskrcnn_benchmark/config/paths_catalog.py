@@ -116,6 +116,7 @@ class DatasetCatalog(object):
             "img_dir": "moma",
             "roidb_file": "moma/moma-SGG.h5",
             "image_file": "moma/image_data.json",
+            "dict_file": "moma/moma-SGG-dicts.json",
         },
         "VG_stanford_filtered_with_attribute": {
             "img_dir": "vg/VG_100K",

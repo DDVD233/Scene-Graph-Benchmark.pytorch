@@ -138,9 +138,9 @@ def train(cfg, local_rank, distributed, logger):
 
     print_first_grad = True
     for iteration, (images, targets, _) in enumerate(train_data_loader, start_iter):
-        if any(len(target) < 1 for target in targets):
-            logger.error(
-                f"Iteration={iteration + 1} || Image Ids used for training {_} || targets Length={[len(target) for target in targets]}")
+        # if any(len(target) < 1 for target in targets):
+        #     logger.error(
+        #         f"Iteration={iteration + 1} || Image Ids used for training {_} || targets Length={[len(target) for target in targets]}")
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
@@ -154,6 +154,13 @@ def train(cfg, local_rank, distributed, logger):
 
         images = images.to(device)
         targets = [target.to(device) for target in targets]
+
+        # Remove images with no boxes
+        for index in range(len(targets)):
+            if len(targets[index]) == 0:
+                targets[index] = targets[index-1]
+                images.tensors[index] = images.tensors[index-1]
+                images.image_sizes[index] = images.image_sizes[index-1]
 
         loss_dict = model(images, targets)
 
