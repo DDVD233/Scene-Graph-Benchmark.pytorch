@@ -48,8 +48,11 @@ class GeneralizedRCNN(nn.Module):
             instances (list[Instances]): a list of detectron2 Instances
             filter (bool): filter out instances with score < 0.2
         """
-        feature = features[-1]
-        assert len(feature) == len(instances)
+        if features is not None:
+            feature = features[-1]
+            assert len(feature) == len(instances)
+        else:
+            feature = None
         boxlists = []
         for index, instance_dict in enumerate(instances):
             instance = instance_dict['instances']
@@ -70,14 +73,15 @@ class GeneralizedRCNN(nn.Module):
                               instance.image_size[::-1], mode="xyxy")
             boxlist.add_field("labels", labels)
             boxlist.add_field("scores", scores)
-            boxlist.add_field("features", feature[index])
-            boxlist.add_field("patch_features", patch_features[index])
+            if features is not None:
+                boxlist.add_field("features", feature[index])
+                boxlist.add_field("patch_features", patch_features[index])
             boxlists.append(boxlist)
         if len(boxlists) > max_dets:
             boxlists = boxlists[:max_dets]
         return boxlists
 
-    def forward(self, images, targets=None, logger=None):
+    def forward(self, images, targets=None, logger=None, box_on=True):
         """
         Arguments:
             images (list[Tensor] or ImageList): images to be processed
@@ -92,17 +96,22 @@ class GeneralizedRCNN(nn.Module):
         """
         if self.training and targets is None:
             raise ValueError("In training mode, targets should be passed")
-        start_time = time.time()
 
         images = to_image_list(images)
         # image_input = self.preprocess(images.tensors)
         image_input = [dict(image=image, im_info=images.image_sizes) for image in images.tensors]
         with torch.no_grad():
-            features, proposals, detections = self.backbone.inference(image_input)
             # Crop & resize image tensors to bsx224x224 before feeding into patch_backbone
             cropped_image = F.interpolate(images.tensors, size=(224, 224),
                                           mode='bilinear', align_corners=False)
             patch_features = self.patch_backbone(cropped_image)
+
+        if not box_on:
+            return patch_features
+
+        with torch.no_grad():
+            features, proposals, detections = self.backbone.inference(image_input)
+
         detections_boxlist = self.instances_to_boxlist(detections, features, patch_features, filter=False)
         assert len(detections_boxlist) == len(images.tensors)
         x, result, detector_losses = self.roi_heads(features, detections_boxlist, targets, logger)
@@ -149,6 +158,12 @@ class GeneralizedRCNN(nn.Module):
             return pad
     
     def process_result_to_features(self, result):
+        if isinstance(result, torch.Tensor):
+            # pad result to (bs, 262, 1408)
+            pad_length = 262 - result.shape[0]
+            pad = nn.functional.pad(result, (0, 0, 0, pad_length))
+            return pad
+
         backbone_features = torch.stack([box.get_field('features') for box in result])  # (batch_size, 256, 24, 24)
 
         patch_backbone_result = torch.stack([box.get_field('patch_features') for box in result]) # (batch_size, 257, 1408)
