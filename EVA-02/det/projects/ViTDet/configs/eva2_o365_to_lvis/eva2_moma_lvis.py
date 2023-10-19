@@ -33,6 +33,12 @@ dataloader.evaluator = L(COCOEvaluator)(
     dataset_name="${..test.dataset.names}",
 )
 
+try:
+    class_weights = get_fed_loss_cls_weights(
+                    dataloader.train.dataset.names, 0.5
+            )
+except:
+    class_weights = None
 
 model.roi_heads.update(
     _target_=CascadeROIHeads,
