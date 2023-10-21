@@ -5,9 +5,10 @@ INPUT:
   MAX_SIZE_TEST: 1000
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  BACKBONE_WEIGHT: '/home/data/models/eva2_moma_lvis/model_0029999.pth'
+  BACKBONE_WEIGHT: '/home/data/models/eva2_moma_lvis/model_0031999.pth'
   BACKBONE_CONFIG: 'EVA-02/det/projects/ViTDet/configs/eva2_o365_to_lvis/eva2_moma_lvis.py'
   STATS_PATH: "/home/data/datasets/moma/stats.pkl"
+  WEIGHT: "/home/data/models/sgvlm_moma_backbone_motif/model_0008000.pth"
 #  WEIGHT: "catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d"
   BACKBONE:
     CONV_BODY: "EVA" # VGG-16
