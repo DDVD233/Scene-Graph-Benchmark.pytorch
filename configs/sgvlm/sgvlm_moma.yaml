@@ -5,7 +5,7 @@ INPUT:
   MAX_SIZE_TEST: 1000
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  BACKBONE_WEIGHT: '/home/data/models/eva2_moma_lvis/model_0017999.pth'
+  BACKBONE_WEIGHT: '/home/data/models/eva2_moma_lvis/model_0029999.pth'
   BACKBONE_CONFIG: 'EVA-02/det/projects/ViTDet/configs/eva2_o365_to_lvis/eva2_moma_lvis.py'
   STATS_PATH: "/home/data/datasets/moma/stats.pkl"
 #  WEIGHT: "catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d"
@@ -71,10 +71,10 @@ MODEL:
     LABEL_SMOOTHING_LOSS: False
     FEATURE_EXTRACTOR: "RelationFeatureExtractor"
     #################### Select Relationship Model ####################
-#    PREDICTOR: "MotifPredictor"
+    PREDICTOR: "MotifPredictor"
     #PREDICTOR: "VCTreePredictor"
 #    PREDICTOR: "TransformerPredictor"
-    PREDICTOR: "CausalAnalysisPredictor"
+#    PREDICTOR: "CausalAnalysisPredictor"
     ################# Parameters for Motif Predictor ##################
     CONTEXT_OBJ_LAYER: 1
     CONTEXT_REL_LAYER: 1

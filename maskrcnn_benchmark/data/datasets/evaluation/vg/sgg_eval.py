@@ -12,6 +12,7 @@ from maskrcnn_benchmark.data import get_dataset_statistics
 from maskrcnn_benchmark.structures.bounding_box import BoxList
 from maskrcnn_benchmark.structures.boxlist_ops import boxlist_iou
 from maskrcnn_benchmark.utils.miscellaneous import intersect_2d, argsort_desc, bbox_overlaps
+import numpy
 
 from abc import ABC, abstractmethod
 
@@ -476,13 +477,13 @@ def _triplet(relations, classes, boxes, predicate_scores=None, class_scores=None
         triplets_scores (#rel, 3) : (sub_score, pred_score, ob_score)
     """
     sub_id, ob_id, pred_label = relations[:, 0], relations[:, 1], relations[:, 2]
-    triplets = np.column_stack((classes.get(sub_id, 0), pred_label, classes.get(ob_id, 0)))
+    triplets = np.column_stack((classes[sub_id], pred_label, classes[ob_id]))
     triplet_boxes = np.column_stack((boxes[sub_id], boxes[ob_id]))
 
     triplet_scores = None
     if predicate_scores is not None and class_scores is not None:
         triplet_scores = np.column_stack((
-            class_scores.get(sub_id, 0), predicate_scores, class_scores[ob_id],
+            class_scores[sub_id], predicate_scores, class_scores[ob_id],
         ))
 
     return triplets, triplet_boxes, triplet_scores

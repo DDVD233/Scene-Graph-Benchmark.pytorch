@@ -37,8 +37,10 @@ try:
     class_weights = get_fed_loss_cls_weights(
                     dataloader.train.dataset.names, 0.5
             )
+    use_fed_loss = True
 except:
     class_weights = None
+    use_fed_loss = False
 
 model.roi_heads.update(
     _target_=CascadeROIHeads,
@@ -62,10 +64,8 @@ model.roi_heads.update(
             test_topk_per_image=300,
             cls_agnostic_bbox_reg=True,
             use_sigmoid_ce=True,
-            use_fed_loss=True,
-            get_fed_loss_cls_weights=lambda: get_fed_loss_cls_weights(
-                dataloader.train.dataset.names, 0.5
-            ),
+            use_fed_loss=use_fed_loss,
+            get_fed_loss_cls_weights=lambda: class_weights,
         )
         for (w1, w2) in [(10, 5), (20, 10), (30, 15)]
     ],
