@@ -73,12 +73,13 @@ class GeneralizedRCNN(nn.Module):
                               instance.image_size[::-1], mode="xyxy")
             boxlist.add_field("labels", labels)
             boxlist.add_field("scores", scores)
+            if len(boxlist) > max_dets:
+                boxlists = boxlist[:max_dets]
+
             if features is not None:
                 boxlist.add_field("features", feature[index])
                 boxlist.add_field("patch_features", patch_features[index])
             boxlists.append(boxlist)
-        if len(boxlists) > max_dets:
-            boxlists = boxlists[:max_dets]
         return boxlists
 
     def forward(self, images, targets=None, logger=None, box_on=True):
