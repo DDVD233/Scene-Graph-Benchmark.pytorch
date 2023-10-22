@@ -74,7 +74,7 @@ class GeneralizedRCNN(nn.Module):
             boxlist.add_field("labels", labels)
             boxlist.add_field("scores", scores)
             if len(boxlist) > max_dets:
-                boxlists = boxlist[:max_dets]
+                boxlist = boxlist[:max_dets]
 
             if features is not None:
                 boxlist.add_field("features", feature[index])
