@@ -150,33 +150,33 @@ class GeneralizedRCNN(nn.Module):
         @type relation_tensor: Tensor of shape (n, 4096)
         """
 
-        if relation_tensor.shape[0] >= 4:
-            return relation_tensor[:4, :]
+        if relation_tensor.shape[0] >= 2:
+            return relation_tensor[:2, :]
         else:
-            pad_length = 4 - relation_tensor.shape[0]
+            pad_length = 2 - relation_tensor.shape[0]
             # (padding_left, padding_right, padding_top, padding_bottom)
             pad = nn.functional.pad(relation_tensor, (0, 0, 0, pad_length))
             return pad
     
     def process_result_to_features(self, result):
         if isinstance(result, torch.Tensor):
-            # pad result to (bs, 262, 1408)
-            pad_length = 262 - result.shape[0]
+            # pad result to (bs, 259, 1408)
+            pad_length = 259 - result.shape[0]
             pad = nn.functional.pad(result, (0, 0, 0, pad_length))
             return pad
 
-        backbone_features = torch.stack([box.get_field('features') for box in result])  # (batch_size, 256, 24, 24)
+        # backbone_features = torch.stack([box.get_field('features') for box in result])  # (batch_size, 256, 24, 24)
 
         patch_backbone_result = torch.stack([box.get_field('patch_features') for box in result]) # (batch_size, 257, 1408)
-        features_chunk = torch.reshape(backbone_features, (backbone_features.shape[0], -1))  # (batch_size, 256 * 24 * 24)
-        features_chunk = self.pooling(features_chunk).unsqueeze(1)  # (batch_size, 1, 1408)
+        # features_chunk = torch.reshape(backbone_features, (backbone_features.shape[0], -1))  # (batch_size, 256 * 24 * 24)
+        # features_chunk = self.pooling(features_chunk).unsqueeze(1)  # (batch_size, 1, 1408)
 
         relation_features = [self.process_relation_features(box.get_field('relation_features'))
-                             for box in result]  # (batch_size, 4, 4096)
-        relation_chunk = torch.stack(relation_features, dim=0)  # (batch_size, 4, 4096)
-        relation_chunk = self.pooling(relation_chunk)  # (batch_size, 4, 1408)
+                             for box in result]  # (batch_size, 2, 4096)
+        relation_chunk = torch.stack(relation_features, dim=0)  # (batch_size, 2, 4096)
+        relation_chunk = self.pooling(relation_chunk)  # (batch_size, 2, 1408)
         # normalize
         # features_chunk = F.normalize(features_chunk, dim=-1)
         # relation_chunk = F.normalize(relation_chunk, dim=-1)
-        final_chunk = torch.cat((patch_backbone_result, features_chunk, relation_chunk), dim=1)  # (batch_size, 262, 1408)
+        final_chunk = torch.cat((relation_chunk, patch_backbone_result), dim=1)  # (batch_size, 259, 1408)
         return final_chunk
