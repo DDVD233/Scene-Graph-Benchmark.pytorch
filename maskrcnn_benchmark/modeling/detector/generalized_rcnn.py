@@ -157,6 +157,13 @@ class GeneralizedRCNN(nn.Module):
             # (padding_left, padding_right, padding_top, padding_bottom)
             pad = nn.functional.pad(relation_tensor, (0, 0, 0, pad_length))
             return pad
+        
+    @staticmethod
+    def prepare_for_retriever(features):
+        # (batch_size, 259, 1408)
+        sg_features = torch.mean(features[:, :2, :], dim=1)  # (batch_size, 1408)
+        patch_backbone_features = torch.mean(features[:, 2:, :], dim=1)  # (batch_size, 1408)
+        return torch.cat((patch_backbone_features, sg_features), dim=1)  # (batch_size, 2816)
     
     def process_result_to_features(self, result):
         if isinstance(result, torch.Tensor):
@@ -175,8 +182,5 @@ class GeneralizedRCNN(nn.Module):
                              for box in result]  # (batch_size, 2, 4096)
         relation_chunk = torch.stack(relation_features, dim=0)  # (batch_size, 2, 4096)
         relation_chunk = self.pooling(relation_chunk)  # (batch_size, 2, 1408)
-        # normalize
-        # features_chunk = F.normalize(features_chunk, dim=-1)
-        # relation_chunk = F.normalize(relation_chunk, dim=-1)
         final_chunk = torch.cat((relation_chunk, patch_backbone_result), dim=1)  # (batch_size, 259, 1408)
         return final_chunk
