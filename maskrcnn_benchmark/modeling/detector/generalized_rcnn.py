@@ -2,6 +2,7 @@
 """
 Implements the Generalized R-CNN framework
 """
+import json
 
 import torch
 from torch import nn
@@ -39,6 +40,43 @@ class GeneralizedRCNN(nn.Module):
         self.preprocess = Preprocessing()
         self.num_features = 1408
         self.pooling = nn.AdaptiveAvgPool1d(1408)
+
+        mapping_path = "/home/data/datasets/moma/moma-SGG-dicts.json"
+        with open(mapping_path, 'r') as f:
+            self.mapping = json.load(f)
+        self.idx_to_label = self.mapping["idx_to_label"]
+        self.idx_to_predicate = self.mapping["idx_to_predicate"]
+
+    def describe_scene_graph(self, results, topk=5):
+        """
+        Describe the scene graph in natural language
+        @param results: a list of BoxList with fields 'labels', 'rel_pair_idxs', 'scores', 'pred_rel_labels'
+
+        @return: a list of strings, each string is a sentence describing the scene graph
+        """
+
+        descriptions = []
+        for result in results:
+            rels = result.get_field('pred_rel_labels').long()
+            labels = result.get_field('labels').long()
+            rel_pair_idxes = result.get_field('rel_pair_idxs').long()
+            description = ''
+            end = min(topk, len(rels))
+            for i in range(end):
+                rel = rels[i]
+                if rel == 0:
+                    continue
+                src = labels[rel_pair_idxes[i][0]]
+                tgt = labels[rel_pair_idxes[i][1]]
+                predicate = self.idx_to_predicate[str(rel.item())]
+
+                src_label = self.idx_to_label[str(src.item())]
+                tgt_label = self.idx_to_label[str(tgt.item())]
+
+                this_desc = predicate.replace('[src]', src_label).replace('[trg]', tgt_label) + '. '
+                description += this_desc
+            descriptions.append(description)
+        return descriptions
 
     def instances_to_boxlist(self, instances, features, patch_features, filter=True, max_dets=20):
         """

@@ -8,7 +8,7 @@ MODEL:
 #  BACKBONE_WEIGHT: '/home/data/models/eva2_moma_lvis/model_0031999.pth'
   BACKBONE_CONFIG: 'EVA-02/det/projects/ViTDet/configs/eva2_o365_to_lvis/eva2_moma_lvis.py'
   STATS_PATH: "/home/data/datasets/moma/stats.pkl"
-  WEIGHT: "/home/data/models/sgvlm_moma_backbone_motif/model_0008000.pth"
+  WEIGHT: "/home/data/models/sgvlm_trans/model_0002000.pth"
 #  WEIGHT: "catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d"
   BACKBONE:
     CONV_BODY: "EVA" # VGG-16
@@ -54,7 +54,7 @@ MODEL:
     USE_BINARY_LOSS: True           # choose binary, because cross_entropy loss deteriorate the box head, even with 0.1 weight
     POS_WEIGHT: 50.0
     ATTRIBUTE_LOSS_WEIGHT: 1.0
-    NUM_ATTRIBUTES: 201             # 201 for VG, 501 for GQA
+    NUM_ATTRIBUTES: 2             # 201 for VG, 501 for GQA
     MAX_ATTRIBUTES: 10
     ATTRIBUTE_BGFG_SAMPLE: True
     ATTRIBUTE_BGFG_RATIO: 3
@@ -72,9 +72,9 @@ MODEL:
     LABEL_SMOOTHING_LOSS: False
     FEATURE_EXTRACTOR: "RelationFeatureExtractor"
     #################### Select Relationship Model ####################
-    PREDICTOR: "MotifPredictor"
+#    PREDICTOR: "MotifPredictor"
     #PREDICTOR: "VCTreePredictor"
-#    PREDICTOR: "TransformerPredictor"
+    PREDICTOR: "TransformerPredictor"
     # PREDICTOR: "CausalAnalysisPredictor"
     ################# Parameters for Motif Predictor ##################
     CONTEXT_OBJ_LAYER: 1
@@ -119,13 +119,13 @@ SOLVER:
   PRE_VAL: False
   SCHEDULE:
     # the following paramters are only used for WarmupReduceLROnPlateau
-    TYPE: "WarmupReduceLROnPlateau"    # WarmupMultiStepLR, WarmupReduceLROnPlateau
+    TYPE: "WarmupMultiStepLR"    # WarmupMultiStepLR, WarmupReduceLROnPlateau
     PATIENCE: 2
     THRESHOLD: 0.001
     COOLDOWN: 0
     FACTOR: 0.1
     MAX_DECAY_STEP: 3
-OUTPUT_DIR: '/home/data/models/sgvlm_moma_backbone_motif'
+OUTPUT_DIR: './home/data/models/sgvlm_moma_trans'
 TEST:
   ALLOW_LOAD_FROM_CACHE: False
   RELATION:

@@ -38,6 +38,8 @@ def compute_on_dataset(model, data_loader, device, synchronize_gather=True, time
                     torch.cuda.synchronize()
                 timer.toc()
             output = [o.to(cpu_device) for o in output]
+            # descriptions = model.describe_scene_graph(output)
+            # print(descriptions)
         if synchronize_gather:
             synchronize()
             multi_gpu_predictions = all_gather({img_id: result for img_id, result in zip(image_ids, output)})
